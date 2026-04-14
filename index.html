@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>¡Relaciona el Animal con su Sonido!</title>
+    <!-- Modern fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700;900&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg-color-1: #ffecd2;
+            --bg-color-2: #fcb69f;
+            --card-bg: rgba(255, 255, 255, 0.85);
+            --card-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+            --text-color: #000000;
+            --highlight: #4facfe;
+            --success: #43e97b;
+            --error: #ff0844;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+        }
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            min-height: 100vh;
+            background: linear-gradient(135deg, var(--bg-color-1) 0%, var(--bg-color-2) 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow-x: hidden;
+            color: var(--text-color);
+        }
+
+        h1,
+        h2 {
+            font-family: 'Fredoka One', cursive;
+            color: #fff;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        p {
+            font-size: 1.2rem;
+            color: #fff;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+            font-weight: 700;
+        }
+
+        .container {
+            width: 95%;
+            max-width: 900px;
+            padding: 20px;
+            text-align: center;
+            z-index: 10;
+        }
+
+        header {
+            margin-bottom: 30px;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            padding: 20px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: var(--card-shadow);
+        }
+
+        .game-board {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+        }
+
+        @media (max-width: 768px) {
+            .game-board {
+                gap: 15px;
+            }
+
+            h1 {
+                font-size: 1.8rem;
+            }
+
+            p {
+                font-size: 1rem;
+            }
+        }
+
+        .column {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            max-width: 400px;
+        }
+
+        .column-title {
+            font-family: 'Fredoka One', cursive;
+            font-size: 1.5rem;
+            color: white;
+            margin-bottom: 10px;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
+        }
+
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(5px);
+            padding: 10px 20px;
+            border-radius: 15px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 90px;
+            border: 4px solid transparent;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 50%;
+            height: 100%;
+            background: linear-gradient(to right, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.8) 50%, rgba(255, 255, 255, 0) 100%);
+            transform: skewX(-25deg);
+            transition: 0.5s;
+        }
+
+        .card:hover::before {
+            left: 150%;
+        }
+
+        .card:hover:not(.matched) {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .animal-emoji {
+            font-size: 3.5rem;
+            filter: drop-shadow(2px 4px 6px rgba(0, 0, 0, 0.1));
+        }
+
+        .sound-text {
+            font-family: 'Fredoka One', cursive;
+            font-size: 1.6rem;
+            color: #ff758c;
+        }
+
+        .card.selected {
+            border-color: var(--highlight);
+            box-shadow: 0 0 20px rgba(79, 172, 254, 0.5);
+            transform: scale(1.05);
+            background: #fff;
+        }
+
+        .card.matched {
+            border-color: var(--success);
+            background-color: #f0fff4;
+            opacity: 0.8;
+            pointer-events: none;
+            animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: inset 0 0 15px rgba(67, 233, 123, 0.3);
+        }
+
+        .card.wrong {
+            border-color: var(--error);
+            background-color: #ffe6e6;
+            animation: shake 0.5s;
+        }
+
+        @keyframes popIn {
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.15);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        @keyframes shake {
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            20%,
+            60% {
+                transform: translateX(-8px) rotate(-3deg);
+            }
+
+            40%,
+            80% {
+                transform: translateX(8px) rotate(3deg);
+            }
+        }
+
+        /* Modal */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(5px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            opacity: 1;
+            transition: opacity 0.4s ease;
+        }
+
+        .modal.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .modal-content {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 50px 40px;
+            border-radius: 25px;
+            text-align: center;
+            max-width: 450px;
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.2);
+            transform: translateY(0);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .modal.hidden .modal-content {
+            transform: translateY(50px) scale(0.9);
+        }
+
+        .modal h2 {
+            color: #ff758c;
+            margin-bottom: 20px;
+            font-size: 3rem;
+            text-shadow: none;
+        }
+
+        .modal p {
+            color: var(--text-color);
+            margin-bottom: 30px;
+            text-shadow: none;
+        }
+
+        button {
+            background: linear-gradient(120deg, #f6d365 0%, #fda085 100%);
+            border: none;
+            padding: 15px 35px;
+            font-size: 1.3rem;
+            font-family: 'Fredoka One', cursive;
+            color: white;
+            border-radius: 30px;
+            cursor: pointer;
+            box-shadow: 0 8px 20px rgba(253, 160, 133, 0.4);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        button::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to right, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.4) 50%, rgba(255, 255, 255, 0) 100%);
+            transition: 0.5s;
+        }
+
+        button:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 12px 25px rgba(253, 160, 133, 0.6);
+        }
+
+        button:hover::after {
+            left: 100%;
+        }
+
+        /* Confetti */
+        .confetti {
+            position: fixed;
+            top: -10px;
+            width: 12px;
+            height: 12px;
+            z-index: 99;
+            animation: fall linear forwards;
+            border-radius: 3px;
+        }
+
+        @keyframes fall {
+            to {
+                transform: translateY(110vh) rotate(720deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>🐾 Relaciona el Animal 🎶</h1>
+            <p>Selecciona un animal y busca su sonido correcto.</p>
+        </header>
+
+        <div class="game-board">
+            <div class="column">
+                <div class="column-title">Animales</div>
+                <div id="animals-col" style="display: flex; flex-direction: column; gap: 15px;"></div>
+            </div>
+            <div class="column">
+                <div class="column-title">Sonidos</div>
+                <div id="sounds-col" style="display: flex; flex-direction: column; gap: 15px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="win-modal" class="modal hidden">
+        <div class="modal-content">
+            <h2>¡Felicidades! 🎉</h2>
+            <p>Has emparejado todos los animales con sus sonidos brillantemente.</p>
+            <button id="restart-btn">Jugar de Nuevo 🔄</button>
+        </div>
+    </div>
+
+    <script>
+        const animalsData = [
+            { id: 'dog', emoji: '🐶', name: 'Perro', soundText: '¡Guau guau!' },
+            { id: 'cat', emoji: '🐱', name: 'Gato', soundText: '¡Miau miau!' },
+            { id: 'cow', emoji: '🐮', name: 'Vaca', soundText: '¡Muuu muuu!' },
+            { id: 'pig', emoji: '🐷', name: 'Cerdo', soundText: '¡Oink oink!' },
+            { id: 'duck', emoji: '🦆', name: 'Pato', soundText: '¡Cuac cuac!' },
+            { id: 'sheep', emoji: '🐑', name: 'Oveja', soundText: '¡Beeee!' },
+            { id: 'lion', emoji: '🦁', name: 'León', soundText: '¡Grrrr!' },
+            { id: 'bird', emoji: '🐦', name: 'Pájaro', soundText: '¡Pío pío!' }
+        ];
+
+        let selectedAnimalCard = null;
+        let selectedSoundCard = null;
+        let lockBoard = false;
+        let matchesCounter = 0;
+
+        function shuffle(array) {
+            let currentIndex = array.length, randomIndex;
+            while (currentIndex !== 0) {
+                randomIndex = Math.floor(Math.random() * currentIndex);
+                currentIndex--;
+                [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+            }
+            return array;
+        }
+
+        function initGame() {
+            const animalsCol = document.getElementById('animals-col');
+            const soundsCol = document.getElementById('sounds-col');
+
+            animalsCol.innerHTML = '';
+            soundsCol.innerHTML = '';
+
+            matchesCounter = 0;
+            selectedAnimalCard = null;
+            selectedSoundCard = null;
+            lockBoard = false;
+
+            document.getElementById('win-modal').classList.add('hidden');
+
+            // Remove existing confetti
+            document.querySelectorAll('.confetti').forEach(el => el.remove());
+
+            const shuffledAnimals = shuffle([...animalsData]);
+            const shuffledSounds = shuffle([...animalsData]);
+
+            shuffledAnimals.forEach(animal => {
+                const div = document.createElement('div');
+                div.classList.add('card');
+                div.dataset.id = animal.id;
+                div.dataset.type = 'animal';
+                div.innerHTML = `<span class="animal-emoji" title="${animal.name}">${animal.emoji}</span>`;
+                div.addEventListener('click', handleCardClick);
+                animalsCol.appendChild(div);
+            });
+
+            shuffledSounds.forEach(sound => {
+                const div = document.createElement('div');
+                div.classList.add('card');
+                div.dataset.id = sound.id;
+                div.dataset.type = 'sound';
+                div.innerHTML = `<span class="sound-text">${sound.soundText}</span>`;
+                div.addEventListener('click', handleCardClick);
+                soundsCol.appendChild(div);
+            });
+        }
+
+        function handleCardClick(e) {
+            if (lockBoard) return;
+            const clickedCard = e.currentTarget;
+
+            // If already matched, do nothing
+            if (clickedCard.classList.contains('matched')) return;
+
+            const type = clickedCard.dataset.type;
+
+            // Handle selection visually and in logic
+            if (type === 'animal') {
+                if (selectedAnimalCard === clickedCard) {
+                    // Deselect if clicked again
+                    selectedAnimalCard.classList.remove('selected');
+                    selectedAnimalCard = null;
+                    return;
+                }
+                if (selectedAnimalCard) selectedAnimalCard.classList.remove('selected');
+                selectedAnimalCard = clickedCard;
+                selectedAnimalCard.classList.add('selected');
+            } else {
+                if (selectedSoundCard === clickedCard) {
+                    // Deselect if clicked again
+                    selectedSoundCard.classList.remove('selected');
+                    selectedSoundCard = null;
+                    return;
+                }
+                if (selectedSoundCard) selectedSoundCard.classList.remove('selected');
+                selectedSoundCard = clickedCard;
+                selectedSoundCard.classList.add('selected');
+            }
+
+            // Check match if both an animal and a sound are selected
+            if (selectedAnimalCard && selectedSoundCard) {
+                checkMatch();
+            }
+        }
+
+        function checkMatch() {
+            lockBoard = true;
+            const isMatch = selectedAnimalCard.dataset.id === selectedSoundCard.dataset.id;
+
+            if (isMatch) {
+                handleMatch();
+            } else {
+                handleWrong();
+            }
+        }
+
+        function handleMatch() {
+            selectedAnimalCard.classList.replace('selected', 'matched');
+            selectedSoundCard.classList.replace('selected', 'matched');
+
+            matchesCounter++;
+
+            resetSelection();
+
+            if (matchesCounter === animalsData.length) {
+                setTimeout(() => {
+                    document.getElementById('win-modal').classList.remove('hidden');
+                    createConfetti();
+                }, 600);
+            }
+        }
+
+        function handleWrong() {
+            selectedAnimalCard.classList.add('wrong');
+            selectedSoundCard.classList.add('wrong');
+
+            const tempAnimal = selectedAnimalCard;
+            const tempSound = selectedSoundCard;
+
+            resetSelection(); // Free up selection immediately for next turn
+
+            setTimeout(() => {
+                tempAnimal.classList.remove('selected', 'wrong');
+                tempSound.classList.remove('selected', 'wrong');
+                lockBoard = false;
+            }, 600);
+        }
+
+        function resetSelection() {
+            selectedAnimalCard = null;
+            selectedSoundCard = null;
+            lockBoard = false;
+        }
+
+        function createConfetti() {
+            const colors = ['#ffecd2', '#fcb69f', '#ff758c', '#ff7eb3', '#43e97b', '#4facfe', '#f6d365'];
+            for (let i = 0; i < 80; i++) {
+                const confetti = document.createElement('div');
+                confetti.classList.add('confetti');
+                confetti.style.left = Math.random() * 100 + 'vw';
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+
+                // Randomize shape (some circles, some squares)
+                if (Math.random() > 0.5) {
+                    confetti.style.borderRadius = '50%';
+                }
+
+                const duration = Math.random() * 3 + 2; // 2s to 5s
+                confetti.style.animationDuration = duration + 's';
+                confetti.style.animationDelay = Math.random() * 2 + 's';
+
+                document.body.appendChild(confetti);
+            }
+        }
+
+        document.getElementById('restart-btn').addEventListener('click', initGame);
+
+        // Start game
+        initGame();
+    </script>
+</body>
+
+</html>
